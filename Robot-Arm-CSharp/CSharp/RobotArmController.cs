@@ -4,14 +4,15 @@ using System.Text;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-public class CSharp
+public class RobotArmController
 {
     public float Speed = 0.5f;
     public int Timeout = 60000; // Timeout in milliseconds
     public TcpClient tcpclnt;
     public Stream strm;
+    public StreamReader strmrdr;
 
-    public CSharp()
+    public RobotArmController()
     {
         try
         {
@@ -21,12 +22,35 @@ public class CSharp
             tcpclnt.Connect("127.0.0.1", 9876);
 
             strm = tcpclnt.GetStream();
+            strmrdr =  new StreamReader(strm);
             ReceiveMessage();
         }
 
         catch(Exception e)
         {
             Console.WriteLine("Error: " + e.StackTrace);
+            Console.ReadKey();
+        }
+    }
+
+    public RobotArmController(string IpAddress, int Port)
+    {
+        try
+        {
+            tcpclnt = new TcpClient();
+            Console.WriteLine("Connecting");
+
+            tcpclnt.Connect(IpAddress, Port);
+
+            strm = tcpclnt.GetStream();
+            strmrdr = new StreamReader(strm);
+            ReceiveMessage();
+        }
+
+        catch (Exception e)
+        {
+            Console.WriteLine("Error: " + e.StackTrace);
+            Console.ReadKey();
         }
     }
 
@@ -38,6 +62,16 @@ public class CSharp
     public void MoveRight()
     {
         SendMessage("Move right");
+    }
+
+    public void Grab()
+    {
+        SendMessage("Grab");
+    }
+
+    public void Drop()
+    {
+        SendMessage("Drop");
     }
 
     public void SendMessage(string cmd)
@@ -62,13 +96,7 @@ public class CSharp
 
     public void ReceiveMessage()
     {
-        byte[] bb = new byte[100];
-        int k = strm.Read(bb, 0, 100);
-        string result = "";
-        for (int i = 0; i < k; i++)
-        {
-            Console.Write(Convert.ToChar(bb[i]).ToString());
-        }
-        Console.WriteLine();
+        string result = strmrdr.ReadLine();
+        Console.WriteLine(result);
     }
 }

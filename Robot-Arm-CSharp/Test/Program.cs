@@ -10,9 +10,12 @@ namespace Test
     {
         static void Main(string[] args)
         {
-            var RobotArm = new CSharp();
+            var RobotArm = new RobotArmController();
             RobotArm.MoveLeft();
+            RobotArm.Grab();
             RobotArm.MoveRight();
+            RobotArm.Drop();
+            RobotArm.Speed = 100;
             Console.ReadKey();
         }
     }
