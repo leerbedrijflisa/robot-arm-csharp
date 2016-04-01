@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 public class RobotArmController
 {
     public float Speed = 0.5f;
-    public int Timeout = 60000; // Timeout in milliseconds
-    public TcpClient tcpclnt;
-    public Stream strm;
-    public StreamReader strmrdr;
+    public int Timeout = 1; // Timeout in seconds
+    private TcpClient tcpclnt;
+    private Stream strm;
+    private StreamReader strmrdr;
 
     public RobotArmController()
     {
@@ -23,12 +23,14 @@ public class RobotArmController
 
             strm = tcpclnt.GetStream();
             strmrdr =  new StreamReader(strm);
-            ReceiveMessage();
+            string response = ReceiveMessage();
+
+            CheckResponse(response, "hello", new string[] { "hello", "bye" });
         }
 
-        catch(Exception e)
+        catch(SocketException e)
         {
-            Console.WriteLine("Error: " + e.StackTrace);
+            Console.WriteLine("Kan geen verbinding maken met de server.");
             Console.ReadKey();
         }
     }
@@ -44,37 +46,65 @@ public class RobotArmController
 
             strm = tcpclnt.GetStream();
             strmrdr = new StreamReader(strm);
-            ReceiveMessage();
+            string response = ReceiveMessage();
+
+            CheckResponse(response, "hello", new string[] { "hello", "bye" });
         }
 
         catch (Exception e)
         {
             Console.WriteLine("Error: " + e.StackTrace);
             Console.ReadKey();
+            return;
         }
     }
 
     public void MoveLeft()
     {
-        SendMessage("Move left");
+        string response = SendMessage("Move left");
+
+        CheckResponse(response, "ok", new string[] { "ok", "bye" });
     }
 
     public void MoveRight()
     {
-        SendMessage("Move right");
+        string response = SendMessage("Move right");
+
+        CheckResponse(response, "ok", new string[] { "ok", "bye" });
     }
 
     public void Grab()
     {
-        SendMessage("Grab");
+        string response = SendMessage("Grab");
+
+        CheckResponse(response, "ok", new string[] { "ok", "bye" });
     }
 
     public void Drop()
     {
-        SendMessage("Drop");
+        string response = SendMessage("Drop");
+
+        CheckResponse(response, "ok", new string[] { "ok", "bye" });
     }
 
-    public void SendMessage(string cmd)
+    private string CheckResponse(string response, string expected, string[] allowed)
+    {
+        var correctResponse = false;
+        response = response.Replace("\n", "");
+
+        for (int i = 0; i < allowed.Length; i++)
+        {
+            if(allowed[i] == response)
+            {
+                correctResponse = true;
+                break;
+            }
+        }
+
+        throw new ProtocolException("De server heeft geen " + expected + " geantwoord.");
+    }
+
+    private string SendMessage(string cmd)
     {
         try
         {
@@ -84,19 +114,29 @@ public class RobotArmController
             byte[] ba = asen.GetBytes(cmd);
 
             strm.Write(ba, 0, ba.Length);
-            ReceiveMessage();
-                
+            return ReceiveMessage();
         }
 
         catch (Exception e)
         {
-            Console.WriteLine("Error: " + e.StackTrace);
+            throw new SocketException();
+            
         }
     }
 
-    public void ReceiveMessage()
+    private string ReceiveMessage()
     {
-        string result = strmrdr.ReadLine();
-        Console.WriteLine(result);
+        try
+        {
+            //Sets the Timeout
+            strmrdr.BaseStream.ReadTimeout = Timeout * 1000;
+            string result = strmrdr.ReadLine();
+            Console.WriteLine(result);
+            return result;
+        }
+        catch (Exception e)
+        {
+            throw new TimeoutException("Te lang geen antwoord gekregen van de server.");
+        }
     }
 }
