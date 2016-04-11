@@ -7,10 +7,24 @@ using System.Threading.Tasks;
 public class RobotArmController
 {
     private float robotArmSpeed;
-    public int Timeout = 60; // Timeout in seconds
+    public int robotArmTimeout = 60; // Timeout in seconds
     private TcpClient tcpclnt;
     private Stream strm;
     private StreamReader strmrdr;
+
+    public int Timeout
+    {
+        get
+        {
+            return robotArmTimeout;
+        }
+        set
+        {
+            robotArmTimeout = value;
+            strmrdr.BaseStream.ReadTimeout = value * 1000;
+        }
+    }
+
 
     public float Speed
     {
@@ -20,10 +34,10 @@ public class RobotArmController
         }
         set
         {
-            robotArmSpeed = value * 100;
-            if(value >= 0.0f && value <= 1.0f)
+            robotArmSpeed = value;
+            if(value >= 0.0f && value <= 0.5f)
             {
-                string response = SendMessage("speed " + robotArmSpeed);
+                string response = SendMessage("speed " + robotArmSpeed * 100);
                 CheckResponse(response, "ok", new string[] { "ok", "bye" });
             }
             else
@@ -38,7 +52,6 @@ public class RobotArmController
         try
         {
             tcpclnt = new TcpClient();
-            Console.WriteLine("Connecting");
             
             tcpclnt.Connect("127.0.0.1", 9876);
 
@@ -60,7 +73,6 @@ public class RobotArmController
         try
         {
             tcpclnt = new TcpClient();
-            Console.WriteLine("Connecting");
 
             tcpclnt.Connect(IpAddress, Port);
 
@@ -161,10 +173,11 @@ public class RobotArmController
         try
         {
             CheckStream();
-            //Sets the Timeout
-            strmrdr.BaseStream.ReadTimeout = Timeout * 1000;
             string result = strmrdr.ReadLine();
-            Console.WriteLine(result);
+            if (result == "bye")
+            {
+                throw new SocketException();
+            }
             return result;
         }
         catch (Exception e)
