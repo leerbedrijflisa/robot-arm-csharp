@@ -40,7 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ColorEnum.cs" />
+    <Compile Include="Color.cs" />
     <Compile Include="ProtocolException.cs" />
     <Compile Include="RobotArmController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

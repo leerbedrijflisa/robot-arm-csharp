@@ -35,7 +35,7 @@ public class RobotArmController
         set
         {
             robotArmSpeed = value;
-            if(value >= 0.0f && value <= 0.5f)
+            if(value >= 0.0f && value <= 1.0f)
             {
                 string response = SendMessage("speed " + robotArmSpeed * 100);
                 CheckResponse(response, "ok", new string[] { "ok", "bye" });
@@ -121,12 +121,38 @@ public class RobotArmController
         CheckResponse(response, "ok", new string[] { "ok", "bye" });
     }
 
-    public void Scan()
+    public Color Scan()
     {
         CheckStream();
         string response = SendMessage("Scan");
 
         CheckResponse(response, "A colour", new string[] { "red", "green", "blue", "white", "none", "bye" });
+        Color color;
+        if (response == Color.red.ToString())
+        {
+            color = Color.red;
+            return color;
+        }
+        else if (response == Color.blue.ToString())
+        {
+            color = Color.blue;
+            return color;
+        }
+        else if (response == Color.green.ToString())
+        {
+            color = Color.green;
+            return color;
+        }
+        else if (response == Color.white.ToString())
+        {
+            color = Color.white;
+            return color;
+        }
+        else
+        {
+            color = Color.none;
+            return color;
+        }
     }
 
     private void CheckStream()
