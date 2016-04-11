@@ -6,11 +6,32 @@ using System.Threading.Tasks;
 
 public class RobotArmController
 {
-    public float Speed = 0.5f;
-    public int Timeout = 1; // Timeout in seconds
+    private float robotArmSpeed;
+    public int Timeout = 60; // Timeout in seconds
     private TcpClient tcpclnt;
     private Stream strm;
     private StreamReader strmrdr;
+
+    public float Speed
+    {
+        get
+        {
+            return robotArmSpeed;
+        }
+        set
+        {
+            robotArmSpeed = value * 100;
+            if(value >= 0.0f && value <= 1.0f)
+            {
+                string response = SendMessage("speed " + robotArmSpeed);
+                CheckResponse(response, "ok", new string[] { "ok", "bye" });
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+        }
+    }
 
     public RobotArmController()
     {
@@ -24,14 +45,13 @@ public class RobotArmController
             strm = tcpclnt.GetStream();
             strmrdr =  new StreamReader(strm);
             string response = ReceiveMessage();
-
+            
             CheckResponse(response, "hello", new string[] { "hello", "bye" });
         }
 
-        catch(SocketException e)
+        catch(Exception e)
         {
-            Console.WriteLine("Kan geen verbinding maken met de server.");
-            Console.ReadKey();
+             throw new SocketException();
         }
     }
 
@@ -53,14 +73,13 @@ public class RobotArmController
 
         catch (Exception e)
         {
-            Console.WriteLine("Error: " + e.StackTrace);
-            Console.ReadKey();
-            return;
+            throw new SocketException();
         }
     }
 
     public void MoveLeft()
     {
+        CheckStream();
         string response = SendMessage("Move left");
 
         CheckResponse(response, "ok", new string[] { "ok", "bye" });
@@ -68,6 +87,7 @@ public class RobotArmController
 
     public void MoveRight()
     {
+        CheckStream();
         string response = SendMessage("Move right");
 
         CheckResponse(response, "ok", new string[] { "ok", "bye" });
@@ -75,6 +95,7 @@ public class RobotArmController
 
     public void Grab()
     {
+        CheckStream();
         string response = SendMessage("Grab");
 
         CheckResponse(response, "ok", new string[] { "ok", "bye" });
@@ -82,12 +103,29 @@ public class RobotArmController
 
     public void Drop()
     {
+        CheckStream();
         string response = SendMessage("Drop");
 
         CheckResponse(response, "ok", new string[] { "ok", "bye" });
     }
 
-    private string CheckResponse(string response, string expected, string[] allowed)
+    public void Scan()
+    {
+        CheckStream();
+        string response = SendMessage("Scan");
+
+        CheckResponse(response, "A colour", new string[] { "red", "green", "blue", "white", "none", "bye" });
+    }
+
+    private void CheckStream()
+    {
+        if (strm == null)
+        {
+            throw new SocketException();
+        }
+    }
+
+    private void CheckResponse(string response, string expected, string[] allowed)
     {
         var correctResponse = false;
         response = response.Replace("\n", "");
@@ -100,34 +138,29 @@ public class RobotArmController
                 break;
             }
         }
-
-        throw new ProtocolException("De server heeft geen " + expected + " geantwoord.");
+        if(!correctResponse)
+        {
+            throw new ProtocolException("De server heeft geen " + expected + " geantwoord.");
+        }
     }
 
     private string SendMessage(string cmd)
     {
-        try
-        {
-            cmd = cmd + "\r\n";
+        CheckStream();
+        cmd = cmd + "\r\n";
 
-            ASCIIEncoding asen = new ASCIIEncoding();
-            byte[] ba = asen.GetBytes(cmd);
+        ASCIIEncoding asen = new ASCIIEncoding();
+        byte[] ba = asen.GetBytes(cmd);
 
-            strm.Write(ba, 0, ba.Length);
-            return ReceiveMessage();
-        }
-
-        catch (Exception e)
-        {
-            throw new SocketException();
-            
-        }
+        strm.Write(ba, 0, ba.Length);
+        return ReceiveMessage();
     }
 
     private string ReceiveMessage()
     {
         try
         {
+            CheckStream();
             //Sets the Timeout
             strmrdr.BaseStream.ReadTimeout = Timeout * 1000;
             string result = strmrdr.ReadLine();

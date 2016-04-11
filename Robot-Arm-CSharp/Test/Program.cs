@@ -11,8 +11,6 @@ namespace Test
         static void Main(string[] args)
         {
             var RobotArm = new RobotArmController();
-            RobotArm.MoveLeft();
-            RobotArm.MoveRight();
             Console.ReadKey();
         }
     }
