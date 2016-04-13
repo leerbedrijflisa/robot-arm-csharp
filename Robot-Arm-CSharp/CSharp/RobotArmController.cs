@@ -3,14 +3,37 @@ using System.IO;
 using System.Text;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
-public class RobotArmController
+public class RobotArmController : IDisposable
 {
+    bool disposed = false;
+    SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
     private float robotArmSpeed;
     public int robotArmTimeout = 60; // Timeout in seconds
     private TcpClient tcpclnt;
     private Stream strm;
     private StreamReader strmrdr;
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposed)
+            return;
+
+        if (disposing)
+        {
+            handle.Dispose();
+        }
+
+        disposed = true;
+    }
 
     public int Timeout
     {
