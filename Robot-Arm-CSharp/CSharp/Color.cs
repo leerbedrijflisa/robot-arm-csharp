@@ -1,8 +1,8 @@
 ﻿public enum Color
 {
-    red,
-    green,
-    blue,
-    white,
-    none
+    Red,
+    Green,
+    Blue,
+    White,
+    None
 }

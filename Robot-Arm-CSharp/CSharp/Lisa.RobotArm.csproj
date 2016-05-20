@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncRobotArmController.cs" />
     <Compile Include="Color.cs" />
     <Compile Include="ProtocolException.cs" />
     <Compile Include="RobotArmController.cs" />
