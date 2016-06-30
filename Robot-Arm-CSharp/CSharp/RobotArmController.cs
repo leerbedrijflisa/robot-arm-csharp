@@ -153,22 +153,22 @@ public class RobotArmController : IDisposable
 
         CheckResponse(response, "A colour", new string[] { "red", "green", "blue", "white", "none", "bye" });
         Color color;
-        if (response == Color.Red.ToString())
+        if (response == Color.Red.ToString().ToLower())
         {
             color = Color.Red;
             return color;
         }
-        else if (response == Color.Blue.ToString())
+        else if (response == Color.Blue.ToString().ToLower())
         {
             color = Color.Blue;
             return color;
         }
-        else if (response == Color.Green.ToString())
+        else if (response == Color.Green.ToString().ToLower())
         {
             color = Color.Green;
             return color;
         }
-        else if (response == Color.White.ToString())
+        else if (response == Color.White.ToString().ToLower())
         {
             color = Color.White;
             return color;
@@ -178,6 +178,14 @@ public class RobotArmController : IDisposable
             color = Color.None;
             return color;
         }
+    }
+
+    public void LoadLevel(string level)
+    {
+        CheckStream();
+        string response = SendMessage("load " + level);
+
+        CheckResponse(response, "ok", new string[] { "ok", "bye" });
     }
 
     private void CheckStream()
